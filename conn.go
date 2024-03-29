@@ -32,6 +32,9 @@ func (conn *Conn) Ping(c context.Context) error {
 	if p, ok := conn.Conn.(driver.Pinger); ok {
 		err = p.Ping(c)
 		if err != nil {
+			if hooks != nil {
+				err = hooks.onError(ctx, err)
+			}
 			return err
 		}
 	}
@@ -79,6 +82,9 @@ func (conn *Conn) PrepareContext(c context.Context, query string) (driver.Stmt, 
 		}
 	}
 	if err != nil {
+		if hooks != nil {
+			err = hooks.onError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -105,6 +111,9 @@ func (conn *Conn) Close() error {
 
 	err = conn.Conn.Close()
 	if err != nil {
+		if hooks := conn.Proxy.hooks; hooks != nil {
+			err = hooks.onError(ctx, err)
+		}
 		return err
 	}
 
@@ -162,6 +171,9 @@ func (conn *Conn) BeginTx(c context.Context, opts driver.TxOptions) (driver.Tx, 
 		}
 	}
 	if err != nil {
+		if hooks != nil {
+			err = hooks.onError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -233,6 +245,9 @@ func (conn *Conn) ExecContext(c context.Context, query string, args []driver.Nam
 		result, err = execer.Exec(stmt.QueryString, dargs)
 	}
 	if err != nil {
+		if hooks != nil {
+			err = hooks.onError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -297,6 +312,9 @@ func (conn *Conn) QueryContext(c context.Context, query string, args []driver.Na
 		rows, err = queryer.Query(stmt.QueryString, dargs)
 	}
 	if err != nil {
+		if hooks != nil {
+			err = hooks.onError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -358,6 +376,9 @@ func (conn *Conn) ResetSession(ctx context.Context) error {
 	if sr, ok := conn.Conn.(sessionResetter); ok {
 		err = sr.ResetSession(ctx)
 		if err != nil {
+			if hooks != nil {
+				err = hooks.onError(myctx, err)
+			}
 			return err
 		}
 	}
