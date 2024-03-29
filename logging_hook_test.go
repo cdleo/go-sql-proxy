@@ -231,3 +231,7 @@ func (h *loggingHook) isValid(ctx interface{}, conn *Conn) error {
 func (h *loggingHook) postIsValid(ctx interface{}, conn *Conn, valid bool) error {
 	return nil
 }
+
+func (h *loggingHook) onError(ctx interface{}, err error) error {
+	return nil
+}

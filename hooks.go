@@ -44,6 +44,7 @@ type hooks interface {
 	preIsValid(conn *Conn) (interface{}, error)
 	isValid(ctx interface{}, conn *Conn) error
 	postIsValid(ctx interface{}, conn *Conn, valid bool) error
+	onError(ctx interface{}, err error) error
 }
 
 // HooksContext is callback functions with context.Context for the proxy.
@@ -394,6 +395,13 @@ type HooksContext struct {
 	// The `ctx` parameter is the return value supplied from the
 	// `Hooks.PrePostIsValid` method, and may be nil.
 	PostIsValid func(ctx interface{}, conn *Conn, valid bool) error
+
+	// OnError is a callback that gets called when a sql.DB operation
+	// returns an error, and give you the opportunity of change/modify the error
+	//
+	// The `ctx` parameter is the return value supplied from the
+	// `Hooks.PreXXXXXX` method, and may be nil.
+	OnError func(ctx interface{}, err error) error
 }
 
 func (h *HooksContext) prePing(c context.Context, conn *Conn) (interface{}, error) {
@@ -625,6 +633,13 @@ func (h *HooksContext) postIsValid(ctx interface{}, conn *Conn, valid bool) erro
 		return nil
 	}
 	return h.PostIsValid(ctx, conn, valid)
+}
+
+func (h *HooksContext) onError(ctx interface{}, err error) error {
+	if h == nil || h.OnError == nil {
+		return nil
+	}
+	return h.OnError(ctx, err)
 }
 
 // Hooks is callback functions for the proxy.
@@ -1150,6 +1165,10 @@ func (h *Hooks) postIsValid(ctx interface{}, conn *Conn, valid bool) error {
 	return nil
 }
 
+func (h *Hooks) onError(ctx interface{}, err error) error {
+	return nil
+}
+
 type multipleHooks []hooks
 
 func (h multipleHooks) preDo(f func(h hooks) (interface{}, error)) (interface{}, error) {
@@ -1407,6 +1426,12 @@ func (h multipleHooks) postIsValid(ctx interface{}, conn *Conn, valid bool) erro
 	}
 	return h.postDo(ctx, err, func(h hooks, ctx interface{}, err error) error {
 		return h.postIsValid(ctx, conn, err == nil)
+	})
+}
+
+func (h multipleHooks) onError(ctx interface{}, err error) error {
+	return h.postDo(ctx, err, func(h hooks, ctx interface{}, err error) error {
+		return h.onError(ctx, err)
 	})
 }
 
