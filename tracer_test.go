@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"testing"
 
-	proxy "github.com/shogo82148/go-sql-proxy"
+	proxy "github.com/cdleo/go-sql-proxy"
 )
 
 func TestTraceProxy(t *testing.T) {

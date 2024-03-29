@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	proxy "github.com/shogo82148/go-sql-proxy"
+	proxy "github.com/cdleo/go-sql-proxy"
 )
 
 func ExampleRegisterProxy() {
