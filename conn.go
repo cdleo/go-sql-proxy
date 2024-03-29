@@ -211,7 +211,7 @@ func (conn *Conn) ExecContext(c context.Context, query string, args []driver.Nam
 	var result driver.Result
 	hooks := conn.Proxy.getHooks(c)
 	if hooks != nil {
-		defer func() { hooks.postExec(c, ctx, stmt, args, result, err) }()
+		defer func() { err = hooks.postExec(c, ctx, stmt, args, result, err) }()
 		if ctx, err = hooks.preExec(c, stmt, args); err != nil {
 			return nil, err
 		}
@@ -275,7 +275,7 @@ func (conn *Conn) QueryContext(c context.Context, query string, args []driver.Na
 	var rows driver.Rows
 	hooks := conn.Proxy.getHooks(c)
 	if hooks != nil {
-		defer func() { hooks.postQuery(c, ctx, stmt, args, rows, err) }()
+		defer func() { err = hooks.postQuery(c, ctx, stmt, args, rows, err) }()
 		if ctx, err = hooks.preQuery(c, stmt, args); err != nil {
 			return nil, err
 		}
